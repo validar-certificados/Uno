@@ -91,6 +91,22 @@
     .footer-grid a { display: block; color: #666; text-decoration: none; margin-bottom: 4px; }
     .footer-bottom { border-top: 1px solid #e0e4e8; padding: 14px 0 0; display: flex; align-items: center; justify-content: space-between; font-size: 0.78rem; color: #999; }
     .sp-logo { display: flex; align-items: center; gap: 10px; font-size: 0.75rem; }
+
+    /* ── MOBILE RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .top-utils { justify-content: center; padding: 10px; }
+      .navbar { padding: 10px 16px; flex-wrap: wrap; }
+      .navbar nav { overflow-x: auto; white-space: nowrap; width: 100%; margin-left: 0; padding-top: 10px; }
+      .breadcrumb { padding: 12px 16px; }
+      .page-layout { flex-direction: column; gap: 30px; }
+      .right-panel { width: 100%; }
+      main { padding: 20px 16px; }
+      .page-title { font-size: 1.6rem; }
+      .form-card { padding: 20px 16px; }
+      .footer { padding: 24px 16px; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .footer-bottom { flex-direction: column; gap: 10px; text-align: center; }
+    }
   </style>
 </head>
 <body>
@@ -118,13 +134,11 @@
 
 <main>
   <div class="page-layout">
-    <!-- LEFT -->
     <div class="left-panel">
       <h1 class="page-title">VALIDADOR DE CERTIFICADOS</h1>
       <p>¿Quieres saber si tu certificado es válido?</p>
     </div>
 
-    <!-- RIGHT -->
     <div class="right-panel">
       <div class="form-card">
         <h3>Ingresa los siguientes datos y<br/>te lo confirmamos</h3>
@@ -211,20 +225,27 @@
 
   function checkReady() {
     const btn = document.getElementById('btn-valida');
-    const rut = document.getElementById('rut').value.trim();
-    const folio = document.getElementById('folio').value.trim();
-    if (rut && folio) { btn.classList.add('ready'); btn.disabled = false; }
-    else { btn.classList.remove('ready'); btn.disabled = true; }
+    if (document.getElementById('rut').value.trim() && document.getElementById('folio').value.trim()) {
+      btn.classList.add('ready'); btn.disabled = false;
+    } else {
+      btn.classList.remove('ready'); btn.disabled = true;
+    }
+  }
+
+  function abrirPDF(b64) {
+    let base64 = b64.startsWith('data:') ? b64.split(',')[1] : b64;
+    const binary = atob(base64); const array = new Uint8Array(binary.length);
+    for(let i=0; i<binary.length; i++) array[i] = binary.charCodeAt(i);
+    const url = URL.createObjectURL(new Blob([array], {type: 'application/pdf'}));
+    window.open(url, '_blank');
   }
 
   async function validar() {
-    const rut   = document.getElementById('rut').value.trim();
-    const folio = document.getElementById('folio').value.trim();
-    const uuid  = folio;
-    if (!rut || !folio) return;
-    const btn = document.getElementById('btn-valida');
-    btn.disabled = true;
-    btn.classList.remove('ready');
+    const uuid = document.getElementById('folio').value.trim();
+    if (!uuid) return;
+    
+    document.getElementById('btn-valida').disabled = true;
+    document.getElementById('btn-valida').classList.remove('ready');
     document.getElementById('spinner').classList.add('active');
     document.getElementById('result-box').classList.remove('visible');
 
@@ -233,61 +254,41 @@
 
     try {
       const res = await fetch(WEBHOOK, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ uuid: uuid, afp: 'UNO' }),
-        signal: controller.signal
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uuid: uuid, afp: 'UNO' }), signal: controller.signal
       });
-      clearTimeout(timeout);
-      const data = await res.json();
+      clearTimeout(timeout); const data = await res.json();
+      
       document.getElementById('spinner').classList.remove('active');
-      const box = document.getElementById('result-box');
-      const hdr = document.getElementById('result-header');
-      const bdy = document.getElementById('result-body');
+      const box = document.getElementById('result-box'), hdr = document.getElementById('result-header'), bdy = document.getElementById('result-body');
+      
       if (data.found === true && data.pdf) {
         hdr.className = 'result-header success';
-        hdr.innerHTML = '<svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#2e7d32"/><path d="M8 12l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Certificado válido';
-        const pdfData = data.pdf.startsWith('data:') ? data.pdf : 'data:application/pdf;base64,' + data.pdf;
-        bdy.innerHTML = '<div class="name">' + (data.name || 'Certificado encontrado') + '</div>' +
-          '<div style="margin-top:12px;border:1px solid #ddd;border-radius:4px;overflow:hidden;">' +
-          '<iframe src="' + pdfData + '" style="width:100%;height:500px;border:none;" title="Certificado PDF"></iframe></div>';
+        hdr.style.backgroundColor = '#e0f4ff'; hdr.style.color = '#1a7cbf'; hdr.style.borderBottom = '3px solid #1a7cbf';
+        hdr.innerHTML = `✅ ¡Confirmado! El certificado es válido`;
+        bdy.innerHTML = `
+          <div style="text-align:center; padding: 20px 0;">
+            <h3 style="color:#333; margin-bottom: 8px;">${data.name || 'Documento Verificado'}</h3>
+            <p style="color:#555; font-size:0.9rem; margin-bottom: 20px;">Los datos ingresados coinciden con nuestros registros.</p>
+            <button onclick="abrirPDF('${data.pdf}')" style="background:#e040a0; color:#fff; border:none; padding:10px 24px; border-radius:6px; cursor:pointer; font-weight:bold;">Descargar Copia PDF</button>
+          </div>`;
       } else if (data.found === false) {
-        hdr.className = 'result-header error';
-        hdr.innerHTML = '<svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#c62828"/><path d="M15 9l-6 6M9 9l6 6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg> Certificado no encontrado';
-        bdy.innerHTML = '<p style="color:#555;font-size:0.9rem;">No se encontró ningún certificado con los datos ingresados.</p>';
+        hdr.className = 'result-header error'; hdr.innerHTML = `❌ Certificado no encontrado`;
+        bdy.innerHTML = `<p style="color:#555;font-size:0.9rem;">No hemos encontrado este certificado.</p>`;
       } else {
-        hdr.className = 'result-header error';
-        hdr.innerHTML = '⚠️ Respuesta inesperada del servidor.';
-        bdy.innerHTML = '<p style="color:#555;font-size:0.9rem;">Intenta nuevamente en unos minutos.</p>';
+        hdr.className = 'result-header error'; hdr.innerHTML = '⚠️ Error inesperado.';
       }
       box.classList.add('visible');
     } catch(err) {
-      clearTimeout(timeout);
-      document.getElementById('spinner').classList.remove('active');
-      const box = document.getElementById('result-box');
-      const hdr = document.getElementById('result-header');
-      const bdy = document.getElementById('result-body');
-      hdr.className = 'result-header error';
-      if (err.name === 'AbortError') {
-        hdr.innerHTML = '⚠️ Tiempo de espera agotado.';
-        bdy.innerHTML = '<p style="color:#555;font-size:0.9rem;">El servidor tardó demasiado. Intenta nuevamente.</p>';
-      } else {
-        hdr.innerHTML = '⚠️ No se pudo conectar con el servidor.';
-        bdy.innerHTML = '<p style="color:#555;font-size:0.9rem;">Verifica tu conexión e intenta nuevamente.</p>';
-      }
-      box.classList.add('visible');
-    } finally {
-      btn.disabled = false;
-      checkReady();
-    }
+      clearTimeout(timeout); document.getElementById('spinner').classList.remove('active');
+      document.getElementById('result-header').innerHTML = '⚠️ Error de conexión.';
+      document.getElementById('result-box').classList.add('visible');
+    } finally { checkReady(); }
   }
 
   window.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('rut').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('folio').focus(); });
-    document.getElementById('folio').addEventListener('keydown', e=>{ if(e.key==='Enter') validar(); });
     document.getElementById('rut').addEventListener('input', checkReady);
     document.getElementById('folio').addEventListener('input', checkReady);
-    document.getElementById('btn-valida').disabled = true;
   });
 </script>
 </body>
