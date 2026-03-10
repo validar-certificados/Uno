@@ -94,11 +94,6 @@
     .footer-grid a { display: block; color: #666; text-decoration: none; margin-bottom: 4px; }
     .footer-bottom { border-top: 1px solid #e0e4e8; padding: 14px 0 0; display: flex; align-items: center; justify-content: space-between; font-size: 0.78rem; color: #999; }
     .sp-logo { display: flex; align-items: center; gap: 10px; font-size: 0.75rem; }
-
-    @media (max-width: 768px) {
-      .page-layout { flex-direction: column; gap: 30px; }
-      .right-panel { width: 100%; }
-    }
   </style>
 </head>
 <body>
@@ -224,14 +219,6 @@
     }
   }
 
-  function abrirPDF(b64) {
-    let base64 = b64.startsWith('data:') ? b64.split(',')[1] : b64;
-    const binary = atob(base64); const array = new Uint8Array(binary.length);
-    for(let i=0; i<binary.length; i++) array[i] = binary.charCodeAt(i);
-    const url = URL.createObjectURL(new Blob([array], {type: 'application/pdf'}));
-    window.open(url, '_blank');
-  }
-
   async function validar() {
     const uuid = document.getElementById('folio').value.trim();
     if (!uuid) return;
@@ -249,33 +236,49 @@
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ uuid: uuid, afp: 'UNO' }), signal: controller.signal
       });
-      clearTimeout(timeout); const data = await res.json();
+      clearTimeout(timeout);
+      const data = await res.json();
       
       document.getElementById('spinner').classList.remove('active');
-      const box = document.getElementById('result-box'), hdr = document.getElementById('result-header'), bdy = document.getElementById('result-body');
+      const box = document.getElementById('result-box');
+      const hdr = document.getElementById('result-header');
+      const bdy = document.getElementById('result-body');
       
       if (data.found === true && data.pdf) {
-        hdr.className = 'result-header success';
-        hdr.style.backgroundColor = '#e0f4ff'; hdr.style.color = '#1a7cbf'; hdr.style.borderBottom = '3px solid #1a7cbf';
+        hdr.className = 'result-header';
+        hdr.style.cssText = 'background: #e0f4ff; color: #1a7cbf; border-bottom: 3px solid #1a7cbf;';
         hdr.innerHTML = `✅ ¡Confirmado! El certificado es válido`;
-        bdy.innerHTML = `
-          <div style="text-align:center; padding: 20px 0;">
-            <h3 style="color:#333; margin-bottom: 8px;">${data.name || 'Documento Verificado'}</h3>
-            <p style="color:#555; font-size:0.9rem; margin-bottom: 20px;">Los datos ingresados coinciden con nuestros registros.</p>
-            <button onclick="abrirPDF('${data.pdf}')" style="background:#e040a0; color:#fff; border:none; padding:10px 24px; border-radius:6px; cursor:pointer; font-weight:bold;">Descargar Copia PDF</button>
-          </div>`;
+        const pdfData = data.pdf.startsWith('data:') ? data.pdf : 'data:application/pdf;base64,' + data.pdf;
+        bdy.innerHTML = `<div class="name">${data.name || 'Certificado encontrado'}</div>` +
+          `<div style="margin-top:12px;border:1px solid #ddd;border-radius:4px;overflow:hidden;">` +
+          `<iframe src="${pdfData}" style="width:100%;height:500px;border:none;" title="Certificado PDF"></iframe></div>`;
       } else if (data.found === false) {
-        hdr.className = 'result-header error'; hdr.innerHTML = `❌ Certificado no encontrado`;
-        bdy.innerHTML = `<p style="color:#555;font-size:0.9rem;">No hemos encontrado este certificado.</p>`;
+        hdr.className = 'result-header';
+        hdr.style.cssText = 'background: #ffebee; color: #c62828; border-bottom: 3px solid #c62828;';
+        hdr.innerHTML = `❌ Certificado no encontrado`;
+        bdy.innerHTML = '<p style="color:#555;font-size:0.9rem;">No se encontró ningún certificado con los datos ingresados.</p>';
       } else {
-        hdr.className = 'result-header error'; hdr.innerHTML = '⚠️ Error inesperado.';
+        hdr.className = 'result-header';
+        hdr.style.cssText = 'background: #ffebee; color: #c62828; border-bottom: 3px solid #c62828;';
+        hdr.innerHTML = '⚠️ Respuesta inesperada del servidor.';
+        bdy.innerHTML = '<p style="color:#555;font-size:0.9rem;">Intenta nuevamente en unos minutos.</p>';
       }
       box.classList.add('visible');
     } catch(err) {
-      clearTimeout(timeout); document.getElementById('spinner').classList.remove('active');
-      document.getElementById('result-header').innerHTML = '⚠️ Error de conexión.';
-      document.getElementById('result-box').classList.add('visible');
-    } finally { checkReady(); }
+      clearTimeout(timeout);
+      document.getElementById('spinner').classList.remove('active');
+      const box = document.getElementById('result-box');
+      const hdr = document.getElementById('result-header');
+      const bdy = document.getElementById('result-body');
+      hdr.className = 'result-header';
+      hdr.style.cssText = 'background: #ffebee; color: #c62828; border-bottom: 3px solid #c62828;';
+      hdr.innerHTML = '⚠️ Error de conexión.';
+      bdy.innerHTML = '<p style="color:#555;font-size:0.9rem;">Verifica tu red e intenta nuevamente.</p>';
+      box.classList.add('visible');
+    } finally {
+      btn.disabled = false;
+      checkReady();
+    }
   }
 
   window.addEventListener('DOMContentLoaded', function() {
